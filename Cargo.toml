@@ -1,0 +1,13 @@
+[package]
+name = "mini_rsa"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+num-iter = "0.1.45"
+num-primes = "0.3.0"
+num-traits = "0.2.19"
+rand = "0.8.5"
+
+[patch.crates-io]
+num-primes = { path = "num-primes" }
