@@ -1,6 +1,7 @@
-use num_primes::BigUint;
-use num_primes::Generator;
+use crate::prime_gen;
+use num_bigint::BigUint;
 use num_traits::{One, ToPrimitive};
+use prime_gen::prime_with_bits;
 
 // Uses the Euclidean algorithm
 fn gcd(a: &BigUint, b: &BigUint) -> BigUint {
@@ -47,9 +48,9 @@ pub struct RsaKeyPair {
 }
 
 impl RsaKeyPair {
-    pub fn new(bits: usize) -> RsaKeyPair {
-        let p: BigUint = Generator::new_prime(bits);
-        let q: BigUint = Generator::new_prime(bits);
+    pub fn new(bits: u64) -> RsaKeyPair {
+        let p: BigUint = prime_with_bits(bits);
+        let q: BigUint = prime_with_bits(bits);
         let n = &p * &q;
         let totient = totient(&p, &q);
         let e = BigUint::from(65537_u32);

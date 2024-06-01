@@ -1,4 +1,5 @@
-use num_primes::{BigUint, RandBigInt};
+use num_bigint::BigInt;
+use num_bigint::{BigUint, RandBigInt};
 use num_traits::One;
 use rand::thread_rng;
 
@@ -37,24 +38,23 @@ pub fn double_ec_point(x: &BigUint, z: &BigUint, modulus: &BigUint) -> (BigUint,
     (x2, z2)
 }
 
-pub fn scalar_mult(x: &BigUint, s: &BigUint, modulus: &BigUint) -> BigUint {
-    let mut a = BigUint::from(1_u8);
-    let mut b = x.clone();
-    let mut c = BigUint::ZERO;
-    let mut d = BigUint::from(1_u8);
-    let (mut e, mut f);
+pub fn scalar_mult(x: &BigInt, s: &BigUint, modulus: &BigInt) -> BigInt {
     let mut clamped = s.to_bytes_le();
     clamped.resize(32, 0);
-    clamped[0] &= 0xf8;
-    clamped[31] = (clamped[31] & 0x7f) | 0x40;
-    let mut bit = 0;
-    for i in 254..=0 {
-        bit = (clamped[i >> 3] >> (i & 7)) & 1;
+    let mut a = BigInt::one();
+    let mut b = x.clone();
+    let mut c = BigInt::ZERO;
+    let mut d = BigInt::one();
+    let mut e;
+    let mut f;
+
+    for i in (0..254).rev() {
+        let bit = (clamped[i >> 3] >> (i & 7)) & 1;
         if bit == 1 {
             std::mem::swap(&mut a, &mut b);
             std::mem::swap(&mut c, &mut d);
         }
-        e = &a + &c;
+        e = &a+&c;
         a = &a - &c;
         c = &b + &d;
         b = &b - &d;
@@ -66,7 +66,7 @@ pub fn scalar_mult(x: &BigUint, s: &BigUint, modulus: &BigUint) -> BigUint {
         a = &a - &c;
         b = &a * &a;
         c = &d - &f;
-        a = &c * BigUint::from(0xDB41_u16);
+        a = &c * &BigInt::from(121665_u32);
         a = &a + &d;
         c = &c * &a;
         a = &d * &f;
@@ -76,9 +76,17 @@ pub fn scalar_mult(x: &BigUint, s: &BigUint, modulus: &BigUint) -> BigUint {
             std::mem::swap(&mut a, &mut b);
             std::mem::swap(&mut c, &mut d);
         }
+
+        a = &a % modulus;
+        b = &b % modulus;
+        c = &c % modulus;
+        d = &d % modulus;
+        e = &a % modulus;
+        f = &f % modulus;
+
+
     }
-    println!("{c}");
-    c = c.modinv(modulus).unwrap();
-    a = &a*&c;
-    a
+
+    (a * c.modinv(modulus).unwrap()) % modulus
+
 }
